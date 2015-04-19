@@ -158,7 +158,7 @@ void setupRadio() {
   radio->stopListening();
 
   radio->begin();
-  radio->setAutoAck(false);
+  radio->setAutoAck(true);
   radio->setChannel(CHANNEL);
   
   //radio->enableAckPayload(); // So we can send a response back
