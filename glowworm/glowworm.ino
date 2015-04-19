@@ -4,70 +4,7 @@
 #include "RF24.h"
 #include "printf.h"
 
-#define DEBUG  /* Enable Serial printing */ 
-
-#define FADE_STEPS 250      /* The number of steps taken to fade between 2 colours */
-#define FADE_INTERVAL 2000  /* The time taken (in ms) to fade between 2 colours */
-
-#define SERIAL_BAUD 57600   /* Baud rate used for serial output */
-
-// The SPI pins
-#define SPI_CE 7
-#define SPI_CSN 8
-
-#define RETRY_DELAY 0
-#define RETRY_COUNT 15
-#define CHANNEL 0x70
-//const uint8_t addresses[2][6] {"GLO_M", "GLO_S"}; // Master, Slave
-byte addresses[][6] = {"2Node","1Node"};
-
-// Timer configuration and steps to be used
-#define TIMER1_INTERVAL 1000 /* Timer1 uses microsecond precision */
-#define TIMER1_FADE_STEP ((FADE_INTERVAL / (TIMER1_INTERVAL / 1000)) / FADE_STEPS)
-
-// LED pins
-typedef enum {
-  LED_LEFT = 4,
-  LED_RIGHT = 2,
-  LED_BLUE = 6,
-  LED_GREEN = 5,
-  LED_RED = 3
-} leds_e;
-
-// Which antennae should be lit
-typedef enum {
-  ANTENNA_NONE = 0x0,
-  ANTENNA_LEFT = 0x1,
-  ANTENNA_RIGHT = 0x2,
-  ANTENNA_BOTH = ANTENNA_LEFT + ANTENNA_RIGHT
-} antenna_e;
-
-// The LED colours
-// Colours are stored as a 32b ARGB value, with Alpha being ignored
-typedef struct {
-  volatile uint32_t current; // The currently set colour
-  volatile uint32_t last;    // The last set colour - used for interpolation
-  volatile uint32_t next;    // The colour that is to be set
-  volatile uint16_t step;    // The counter for interpolating
-  volatile antenna_e antenna;// Which antennae should be lit 
-} led_status;
-
-// The configuration that is send over the RF24 link
-typedef struct {
-  uint8_t b;
-  uint8_t g;
-  uint8_t r;
-  uint8_t antenna;
-} led_config;
-
-// The current lighting configuration
-led_status * const lights = new led_status();
-
-// The RF24 radio object
-RF24 * const radio = new RF24(SPI_CE, SPI_CSN);
-
-// The counter used for Timer1
-uint16_t timer1_counter = 0;
+#include "glowworm.h"
 
 void setup() {
 #ifdef DEBUG
@@ -84,7 +21,7 @@ void setup() {
   
   // Clear the current lights
   lights->last = 0;
-  lights->next = 0;
+  lights->next = 0x808080;
   lights->step = 0;
   lights->antenna = ANTENNA_NONE;
   
@@ -99,8 +36,10 @@ void setup() {
 }
 
 void loop() {
+  led_config * config = NULL;
+  
   if (radio->available()) {
-    led_config * config = new led_config();
+    config = new led_config();
 
     // Read the data from the radio - we're dealing with constant length data
     // for the time being
@@ -112,20 +51,13 @@ void loop() {
     radio->stopListening();
     radio->write(&config, sizeof(*config));
     radio->startListening();
-    
-    lights->last = lights->current; // Use the current colour to interpolate from
-    lights->next =
-      ((uint32_t)config->r << 16) |
-      ((uint32_t)config->g << 8) |
-      ((uint32_t)config->b << 0);
-    lights->step = 0;
-    
-    lights->antenna = (antenna_e)(config->antenna & ANTENNA_BOTH);
-    digitalWrite(LED_LEFT, lights->antenna & ANTENNA_LEFT);
-    digitalWrite(LED_RIGHT, lights->antenna & ANTENNA_RIGHT);
+  
+  } else if (Serial.available() >= (2 * sizeof(led_config))) {
+    config = readSerial();
+  }
 
-    printf("Setting colour from %06lx to %06lx - Antenna: %u\r\n", lights->last, lights->next, lights->antenna);
-    
+  if (config) {
+    changeColour(config);
     delete config;
   }
 
@@ -133,6 +65,55 @@ void loop() {
     radio->failureDetected = 0;
     setupRadio();
   }  
+}
+
+void changeColour(led_config * config) {
+  lights->last = lights->current; // Use the current colour to interpolate from
+  lights->next =
+    ((uint32_t)config->r << 16) |
+    ((uint32_t)config->g << 8) |
+    ((uint32_t)config->b << 0);
+  lights->step = 0;
+  
+  lights->antenna = (antenna_e)(config->antenna & ANTENNA_BOTH);
+    digitalWrite(LED_LEFT, lights->antenna & ANTENNA_LEFT);
+    digitalWrite(LED_RIGHT, lights->antenna & ANTENNA_RIGHT);
+
+  printf("Setting colour from %06lx to %06lx - Antenna: %u\r\n", lights->last, lights->next, lights->antenna);
+}
+
+led_config * readSerial() {
+  char * buff = new char[SERIAL_BUFFER];
+  
+  uint8_t read = 0;
+  while (Serial.available()) {
+    if (read < SERIAL_BUFFER) {
+      buff[read++] = Serial.read();
+    } else {
+      // Just dump the data
+      Serial.read();
+    }
+  }
+
+  led_config *config = NULL;
+  
+  if (read >= (2 * sizeof(led_config))) {
+    config = new led_config();
+    
+    // We're expecting a hex representation of the led_config object
+    // so null terminate the string
+    buff[2 * sizeof(led_config)] = 0;
+    
+    printf("Read %u bytes from serial: %s\n", read, buff);
+    
+    // Fill the buffer into the config
+    uint32_t * temp = (uint32_t *)config;
+    *temp = strtol(buff, NULL, 16);
+  }
+
+  delete buff;
+  
+  return config;
 }
 
 void setupLEDs() {
