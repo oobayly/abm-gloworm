@@ -1,4 +1,4 @@
-#include "../glowworm_core.h"
+#include "../glowworm/glowworm_core.h"
 
 #define TIMEOUT 200		 /* The send timout (in ms) */
 

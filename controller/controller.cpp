@@ -4,7 +4,7 @@
 #include <string>
 #include <RF24/RF24.h>
 
-#include "../glowworm_core.h"
+#include "../glowworm/glowworm_core.h"
 #include "controller.h"
 
 using namespace std;
