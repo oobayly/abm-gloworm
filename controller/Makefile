@@ -18,10 +18,7 @@ CCFLAGS=-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s
 #CCFLAGS=
 
 # define all programs
-#PROGRAMS = scanner pingtest gettingstarted
-#PROGRAMS = gettingstarted gettingstarted_call_response transfer pingpair_dyn
-#PROGRAMS = gettingstarted
-PROGRAMS = glowworm
+PROGRAMS = controller
 SOURCES = ${PROGRAMS:=.cpp}
 
 all: ${PROGRAMS}
