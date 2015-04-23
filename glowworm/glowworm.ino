@@ -4,6 +4,7 @@
 #include "RF24.h"
 #include "printf.h"
 
+#include "glowworm_core.h"
 #include "glowworm.h"
 
 void setup() {
@@ -16,7 +17,7 @@ void setup() {
   printf("FADE_INTERVAL: %u ms\r\n", FADE_INTERVAL);
   printf("TIMER1_FADE_STEP: %u\r\n", TIMER1_FADE_STEP);
   
-  printf("Size of led_config is %u bytes\r\n", sizeof(led_config));
+  printf("Size of glowworm is %u bytes\r\n", sizeof(glowworm_config));
 #endif
   
   // Clear the current lights
@@ -36,10 +37,10 @@ void setup() {
 }
 
 void loop() {
-  led_config * config = NULL;
+  glowworm_config * config = NULL;
   
   if (radio->available()) {
-    config = new led_config();
+    config = new glowworm_config();
 
     // Read the data from the radio - we're dealing with constant length data
     // for the time being
@@ -52,7 +53,7 @@ void loop() {
     radio->write(&config, sizeof(*config));
     radio->startListening();
   
-  } else if (Serial.available() >= (2 * sizeof(led_config))) {
+  } else if (Serial.available() >= (2 * sizeof(glowworm_config))) {
     config = readSerial();
   }
 
@@ -67,7 +68,7 @@ void loop() {
   }  
 }
 
-void changeColour(led_config * config) {
+void changeColour(glowworm_config * config) {
   lights->last = lights->current; // Use the current colour to interpolate from
   lights->next =
     ((uint32_t)config->r << 16) |
@@ -82,7 +83,7 @@ void changeColour(led_config * config) {
   printf("Setting colour from %06lx to %06lx - Antenna: %u\r\n", lights->last, lights->next, lights->antenna);
 }
 
-led_config * readSerial() {
+glowworm_config * readSerial() {
   char * buff = new char[SERIAL_BUFFER];
   
   uint8_t read = 0;
@@ -95,14 +96,14 @@ led_config * readSerial() {
     }
   }
 
-  led_config *config = NULL;
+  glowworm_config *config = NULL;
   
-  if (read >= (2 * sizeof(led_config))) {
-    config = new led_config();
+  if (read >= (2 * sizeof(glowworm_config))) {
+    config = new glowworm_config();
     
-    // We're expecting a hex representation of the led_config object
+    // We're expecting a hex representation of the glowworm object
     // so null terminate the string
-    buff[2 * sizeof(led_config)] = 0;
+    buff[2 * sizeof(glowworm_config)] = 0;
     
     printf("Read %u bytes from serial: %s\n", read, buff);
     

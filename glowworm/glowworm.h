@@ -1,5 +1,7 @@
 #include "RF24.h"
 
+#include "glowworm_core.h"
+
 #ifndef GLOWWORM_H
 #define GLOWWORM_H
 
@@ -29,18 +31,10 @@ byte addresses[][6] = {"2Node","1Node"};
 typedef enum {
   LED_LEFT = 4,
   LED_RIGHT = 2,
-  LED_BLUE = 6,
+  LED_BLUE = 3,
   LED_GREEN = 5,
-  LED_RED = 3
+  LED_RED = 6
 } leds_e;
-
-// Which antennae should be lit
-typedef enum {
-  ANTENNA_NONE = 0x0,
-  ANTENNA_LEFT = 0x1,
-  ANTENNA_RIGHT = 0x2,
-  ANTENNA_BOTH = ANTENNA_LEFT + ANTENNA_RIGHT
-} antenna_e;
 
 // The LED colours
 // Colours are stored as a 32b ARGB value, with Alpha being ignored
@@ -52,14 +46,6 @@ typedef struct {
   volatile antenna_e antenna;// Which antennae should be lit 
 } led_status;
 
-// The configuration that is send over the RF24 link
-typedef struct {
-  uint8_t b;
-  uint8_t g;
-  uint8_t r;
-  uint8_t antenna;
-} led_config;
-
 // The current lighting configuration
 led_status * const lights = new led_status();
 
@@ -70,9 +56,9 @@ RF24 * const radio = new RF24(SPI_CE, SPI_CSN);
 uint16_t timer1_counter = 0;
 
 // Changes the LEDs to the specified colours
-void changeColour(led_config *);
+void changeColour(glowworm_config *);
 
-led_config * readSerial();
+glowworm_config * readSerial();
 
 void setupLEDs();
 
