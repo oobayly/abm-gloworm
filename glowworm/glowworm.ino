@@ -22,7 +22,7 @@ void setup() {
   
   // Clear the current lights
   lights->last = 0;
-  lights->next = 0x808080;
+  lights->next = 0;
   lights->step = 0;
   lights->antenna = ANTENNA_NONE;
   
