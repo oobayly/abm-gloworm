@@ -3,6 +3,8 @@
 #include <sstream>
 #include <string>
 #include <RF24/RF24.h>
+#include <curses.h>
+#include <menu.h>
 
 #include "../glowworm/glowworm_core.h"
 #include "controller.h"
@@ -15,24 +17,193 @@ RF24 * const radio = new RF24(RPI_GPIO_P1_22, BCM2835_SPI_CS0, BCM2835_SPI_SPEED
 
 glowworm_config * const glowworm = new glowworm_config();
 
+WINDOW * infoWindow;
+
+
 int main(int argc, char** argv){
+	// Setup the radio
 	setupRadio();
 	setupRadio(PROGRAM_GLOWWORM);
 
-	while (1) {
-		// For the time being, just generate some random colours
-		// Clip the antenna to 3, and truncate the colours to increments of 64
-		uint32_t data = rand() & 0x03c0c0c0;
-		writeGlowworm(
-			(antenna_e)((data >> 24) & 0xff),
-			data >> 16,
-			data >> 8,
-			data);
+	// Initialise the ncurses window
+	initscr();
+	cbreak();
+	noecho();
+	keypad(stdscr, TRUE);
 
-		sleep(INTERVAL);
+	infoWindow = newwin(20, 40, 20, 0);
+
+	while (createMenu(PROGRAM_EXIT)) {
 	}
 
+	endwin();
+
 	return 0;
+}
+
+bool createMenu(program_e prog) {
+	// The ncurses menu
+	ITEM ** myItems;
+	int c;
+	MENU * myMenu;
+	uint8_t menuCount;
+	const char ** descriptions;
+	ITEM * currentItem;
+
+	// Which menu should be displayed
+	switch (prog) {
+		case PROGRAM_BOTTLES:
+			descriptions = BOTTLES_MENU;
+			menuCount = ARRAY_SIZE(BOTTLES_MENU);
+			break;
+
+		case PROGRAM_CAULDRON:
+			descriptions = CAULDRON_MENU;
+			menuCount = ARRAY_SIZE(CAULDRON_MENU);
+			break;
+
+		case PROGRAM_GLOWWORM:
+			descriptions = GLOWWORM_MENU;
+			menuCount = ARRAY_SIZE(GLOWWORM_MENU);
+			break;
+
+		default:
+			descriptions = MAIN_MENU;
+			menuCount = ARRAY_SIZE(MAIN_MENU);
+			break;
+
+	}
+
+	// Allocate the menu items and create them
+	myItems = (ITEM **)calloc(menuCount + 1, sizeof(ITEM *));
+	for (uint8_t i = 0; i < menuCount; i++) {
+		myItems[i] = new_item(descriptions[i], NULL); // Don't need a description
+	}
+	myItems[menuCount] = (ITEM *)NULL;
+
+	// And draw it
+	myMenu = new_menu((ITEM **)myItems);
+	post_menu(myMenu);
+	refresh();
+
+	// Redraw the information window
+	wclear(infoWindow);
+	box(infoWindow, 0,0);
+	wrefresh(infoWindow);
+
+	program_e newProg = PROGRAM_EXIT;
+	while ((c = getch())) {
+		bool quit = false;
+		switch (c) {
+			case KEY_DOWN:
+				menu_driver(myMenu, REQ_DOWN_ITEM);
+				break;
+
+			case KEY_UP:
+				menu_driver(myMenu, REQ_UP_ITEM);
+				break;
+
+			case 10: // Enter
+				currentItem = current_item(myMenu);
+				int index = item_index(currentItem);
+				if (prog == PROGRAM_EXIT) {
+					quit = true;
+					newProg = (program_e)index;
+				} else if (index == 0)  {
+					quit = true;
+				} else {
+					// Just do what ever was requested
+					programMenuSelected(prog, currentItem);
+				}
+				break;
+		}
+
+		if (quit)
+			break;
+	}
+
+	unpost_menu(myMenu);
+	for (uint8_t i = 0; i < menuCount; i++) {
+		free_item(myItems[i]);
+	}
+	free_menu(myMenu);
+
+	if (prog == PROGRAM_EXIT) {
+		if (newProg == PROGRAM_EXIT) {
+			return false; // Signal that we want to quit
+		} else {
+			createMenu(newProg); // Draw the requested program menu
+		}
+	}
+
+	return true;
+}
+
+bool doBottles(bottles_e command) {
+	switch (command) {
+		default:
+			return true;
+	}
+}
+
+bool doCauldron(cauldron_e command) {
+	switch (command) {
+		default:
+			return true;
+	}
+}
+
+bool doGlowworm(glowworm_e command) {
+	switch (command) {
+		case GLOWWORM_OFF:
+			return writeGlowworm(ANTENNA_NONE, 0, 0, 0);
+		
+		case GLOWWORM_TOGGLE_BOTH:
+			return writeGlowworm((antenna_e)(glowworm->antenna ^ ANTENNA_BOTH));
+
+		case GLOWWORM_TOGGLE_LEFT:
+			return writeGlowworm((antenna_e)(glowworm->antenna ^ ANTENNA_LEFT));
+
+		case GLOWWORM_TOGGLE_RIGHT:
+			return writeGlowworm((antenna_e)(glowworm->antenna ^ ANTENNA_RIGHT));
+
+		case GLOWWORM_RED:
+			return writeGlowworm(0xff, 0, 0);
+
+		case GLOWWORM_GREEN:
+			return writeGlowworm(0, 0xff, 0);
+
+		case GLOWWORM_BLUE:
+			return writeGlowworm(0,0, 0xff);
+
+		default:
+			return true;
+	}
+}
+
+void programMenuSelected(program_e prog, ITEM * item) {
+	// Set up the radio for the particular program
+	setupRadio(prog);
+
+	int index = item_index(item);
+
+	switch (prog) {
+		case PROGRAM_BOTTLES:
+			doBottles((bottles_e)index);
+			break;
+
+		case PROGRAM_CAULDRON:
+			doCauldron((cauldron_e)index);
+			break;
+
+		case PROGRAM_GLOWWORM:
+			doGlowworm((glowworm_e)index);
+			break;
+
+		default:
+			break;
+
+	}
 }
 
 void setupRadio() {
@@ -77,8 +248,6 @@ void setupRadio(program_e prog) {
 	radio->openWritingPipe(addresses[write]);
 
 	radio->startListening();
-	
-	radio->printDetails();
 }
 
 bool writeGlowworm(antenna_e antenna) {
@@ -95,22 +264,36 @@ bool writeGlowworm(antenna_e antenna, uint8_t r, uint8_t g, uint8_t b) {
 	glowworm->g = g;
 	glowworm->b = b;
 
-	printf("Sending: Antenna: %i, R: 0x%02x, G: 0x%02x, B: 0x%02x ...\n",
+	mvwprintw(infoWindow, 1, 1, "Antenna: %i", antenna);
+	mvwprintw(infoWindow, 2, 1, "Red:     0x%02x", r);
+	mvwprintw(infoWindow, 3, 1, "Green:   0x%02x", g);
+	mvwprintw(infoWindow, 4, 1, "Blue:    0x%02x", b);
+
+	mvprintw(LINES - 3, 0,
+		"Sending: Antenna: %i, R: 0x%02x, G: 0x%02x, B: 0x%02x ...\n",
 		antenna, r, g, b);
 
-	return writeRadio(glowworm, sizeof(glowworm));
+	wrefresh(infoWindow);
+
+	glowworm_config * response = new glowworm_config();
+
+	bool success = writeRadio(glowworm, sizeof(glowworm), response);
+
+	delete response;
+
+	return success;
 }
 
-bool writeRadio(void * payload, size_t length) {
+bool writeRadio(void * payload, size_t length, void * response) {
 	// Stop listening so we can send
 	radio->stopListening();
 
 	// Current time so we can measure the response time
 	uint32_t time = millis();
 
-	printf("Sending %i bytes...", length);
+	mvprintw(LINES - 2, 0, "Sending %i bytes...", length);
 	bool ok = radio->write(payload, length);
-	printf("%s\n", ok ? "done" : "failed");
+	mvprintw(LINES - 2, 20, "%s\n", ok ? "done" : "failed");
 
 	// Start listening agains so we can receive the response
 	radio->startListening();
@@ -127,12 +310,11 @@ bool writeRadio(void * payload, size_t length) {
 
 	// What happened
 	if (timeout) {
-		printf("Failed - response timed out after %u.\n", TIMEOUT);
+		mvprintw(LINES - 1, 0, "Failed - response timed out after %u.\n", TIMEOUT);
 	} else {
-		uint8_t * response = new uint8_t[length];
 		radio->read(response, length);
-		printf("Received %i bytes - round-trip delay: %u\n", length, pingTime);
-		delete response;
+		mvprintw(LINES - 1, 0, "Received %i bytes - round-trip delay: %u\n", length, pingTime);
+		mvprintw(LINES - 1, 0, "Success");
 	}
 
 	return true;
