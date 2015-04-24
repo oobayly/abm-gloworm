@@ -20,8 +20,7 @@
 #define RETRY_DELAY 0
 #define RETRY_COUNT 15
 #define CHANNEL 0x70
-//const uint8_t addresses[2][6] {"GLO_M", "GLO_S"}; // Master, Slave
-byte addresses[][6] = {"2Node","1Node"};
+byte addresses[][6] = {"Ctrlr","Gworm"};
 
 // Timer configuration and steps to be used
 #define TIMER1_INTERVAL 1000 /* Timer1 uses microsecond precision */
