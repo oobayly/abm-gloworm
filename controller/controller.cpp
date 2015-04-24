@@ -7,6 +7,7 @@
 #include <menu.h>
 
 #include "../glowworm/glowworm_core.h"
+#include "../cauldron/cauldron_core.h"
 #include "controller.h"
 
 using namespace std;
@@ -16,9 +17,9 @@ using namespace std;
 RF24 * const radio = new RF24(RPI_GPIO_P1_22, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_8MHZ);
 
 glowworm_config * const glowworm = new glowworm_config();
+cauldron_config * const cauldron = new cauldron_config();
 
 WINDOW * infoWindow;
-
 
 int main(int argc, char** argv){
 	// Setup the radio
@@ -148,6 +149,21 @@ bool doBottles(bottles_e command) {
 
 bool doCauldron(cauldron_e command) {
 	switch (command) {
+		case CAULDRON_OFF:
+			return writeCauldron(CAULDRON_MODE_NONE);
+
+		case CAULDRON_TOGGLE_ALL:
+			return writeCauldron((cauldron_mode_e)(cauldron->mode ^ CAULDRON_MODE_ALL));
+
+		case CAULDRON_TOGGLE_FAN:
+			return writeCauldron((cauldron_mode_e)(cauldron->mode ^ CAULDRON_MODE_FAN));
+
+		case CAULDRON_TOGGLE_FIRE:
+			return writeCauldron((cauldron_mode_e)(cauldron->mode ^ CAULDRON_MODE_FIRE));
+
+		case CAULDRON_TOGGLE_GLOW:
+			return writeCauldron((cauldron_mode_e)(cauldron->mode ^ CAULDRON_MODE_GLOW));
+
 		default:
 			return true;
 	}
@@ -235,13 +251,14 @@ void setupRadio() {
 void setupRadio(program_e prog) {
 	radio->stopListening();
 	size_t payload;
-	const uint8_t read = 0;
-	uint8_t write;
 
 	switch (prog) {
+		case PROGRAM_CAULDRON:
+			payload = sizeof(cauldron_config);
+			break;
+
 		case PROGRAM_GLOWWORM:
 			payload = sizeof(glowworm_config);
-			write = PROGRAM_GLOWWORM;
 			break;
 
 		default:
@@ -250,10 +267,28 @@ void setupRadio(program_e prog) {
 	}
 
 	radio->setPayloadSize(payload);
-	radio->openReadingPipe(1, addresses[read]);
-	radio->openWritingPipe(addresses[write]);
+	radio->openReadingPipe(1, addresses[0]);
+	radio->openWritingPipe(addresses[prog]);
 
 	radio->startListening();
+}
+
+bool writeCauldron(cauldron_mode_e mode) {
+	cauldron->mode = mode;
+
+	mvwprintw(infoWindow, 1, 1, "Fan:   %s", (mode & CAULDRON_MODE_FAN) ? "On" : "Off");
+	mvwprintw(infoWindow, 2, 1, "Fire:  %s", (mode & CAULDRON_MODE_FIRE) ? "On" : "Off");
+	mvwprintw(infoWindow, 3, 1, "Glow:  %s", (mode & CAULDRON_MODE_GLOW) ? "On" : "Off");
+
+	wrefresh(infoWindow);
+
+	cauldron_config * response = new cauldron_config();
+
+	bool success = writeRadio(cauldron, sizeof(cauldron), response);
+
+	delete response;
+
+	return success;
 }
 
 bool writeGlowworm(antenna_e antenna) {

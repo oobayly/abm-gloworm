@@ -16,7 +16,12 @@ uint8_t addresses[][6] = {
 	"Cldrn"};
 
 typedef enum {
-	CAULDRON_BACK
+	CAULDRON_BACK,
+	CAULDRON_OFF,
+	CAULDRON_TOGGLE_ALL,
+	CAULDRON_TOGGLE_FAN,
+	CAULDRON_TOGGLE_FIRE,
+	CAULDRON_TOGGLE_GLOW
 } cauldron_e;
 
 typedef enum {
@@ -48,7 +53,12 @@ const char * BOTTLES_MENU[] = {
 };
 
 const char * CAULDRON_MENU[] = {
-	"Back"
+	"Back",
+	"All Off",
+	"Toggle All",
+	"Toggle Fan",
+	"Toggle Fire",
+	"Toggle Cauldron Glow"
 };
 
 const char * GLOWWORM_MENU[] = {
@@ -86,6 +96,8 @@ void programMenuSelected(program_e prog, ITEM * item);
 void setupRadio();
 
 void setupRadio(program_e prog);
+
+bool writeCauldron(cauldron_mode_e mode);
 
 bool writeGlowworm(antenna_e antenna);
 
