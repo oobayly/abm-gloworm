@@ -150,13 +150,11 @@ void setupRadio() {
   
   // Use High power, and slowest rate
   radio->setPALevel(RF24_PA_HIGH);
-//  radio->setDataRate(RF24_1MBPS);
-//  radio->setPALevel(RF24_PA_LOW);
   radio->setDataRate(RF24_250KBPS);
   
-  // Pipes
-  radio->openReadingPipe(1, addresses[0]); // We write to the slave
-  radio->openWritingPipe(addresses[1]);    // And read from the master
+  // Pipes - Write to the controller
+  radio->openWritingPipe(addresses[0]);
+  radio->openReadingPipe(1, addresses[1]);
   
   radio->printDetails();
   
