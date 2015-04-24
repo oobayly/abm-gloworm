@@ -8,7 +8,7 @@
 #define DEBUG  /* Enable Serial printing */ 
 
 #define FADE_STEPS 250      /* The number of steps taken to fade between 2 colours */
-#define FADE_INTERVAL 2000  /* The time taken (in ms) to fade between 2 colours */
+#define FADE_INTERVAL 1000  /* The time taken (in ms) to fade between 2 colours */
 
 #define SERIAL_BAUD 57600   /* Baud rate used for serial output */
 #define SERIAL_BUFFER 64    /* The number of bytes we can read from the buffer */
@@ -31,8 +31,8 @@ typedef enum {
   LED_LEFT = 4,
   LED_RIGHT = 2,
   LED_BLUE = 3,
-  LED_RED = 5
-  LED_GREEN = 6,
+  LED_RED = 5,
+  LED_GREEN = 6
 } leds_e;
 
 // The LED colours
