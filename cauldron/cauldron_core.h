@@ -5,7 +5,8 @@ typedef enum {
 	CAULDRON_MODE_NONE = 0x0,
 	CAULDRON_MODE_FAN = 0x1,
 	CAULDRON_MODE_FIRE = 0x2,
-	CAULDRON_MODE_GLOW = 0x4
+	CAULDRON_MODE_GLOW = 0x4,
+        CAULDRON_MODE_ALL = 0xff
   
 } cauldron_mode_e;
 

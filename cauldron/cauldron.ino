@@ -118,8 +118,8 @@ cauldron_config * readSerial() {
 void setupCycles() {
   // The fan cycles between 50% and 100% every 5 seconds
   fan->enabled = false;
-  fan->minimum = 0x80;
-  fan->maximum = 0xff;
+  fan->minimum = 0xff;
+  fan->maximum = 0x80;
   fan->time = 5000;
   fan->step = 0;
   fan->delta = 1;
