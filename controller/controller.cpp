@@ -176,6 +176,12 @@ bool doGlowworm(glowworm_e command) {
 		case GLOWWORM_BLUE:
 			return writeGlowworm(0,0, 0xff);
 
+		case GLOWWORM_YELLOW:
+			return writeGlowworm(0xff, 0xff, 0);
+
+		case GLOWWORM_PINK:
+			return writeGlowworm(0xff, 0x14,0x93); // Deep Pink
+
 		default:
 			return true;
 	}

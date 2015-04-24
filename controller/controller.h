@@ -31,7 +31,9 @@ typedef enum {
 	GLOWWORM_TOGGLE_RIGHT,
 	GLOWWORM_RED,
 	GLOWWORM_GREEN,
-	GLOWWORM_BLUE
+	GLOWWORM_BLUE,
+	GLOWWORM_YELLOW,
+	GLOWWORM_PINK
 } glowworm_e;
 
 typedef enum {
@@ -57,7 +59,9 @@ const char * GLOWWORM_MENU[] = {
 	"Toggle Right",
 	"Red",
 	"Green",
-	"Blue"
+	"Blue",
+	"Yellow",
+	"Pink"
 };
 
 const char * MAIN_MENU[] = {
