@@ -19,6 +19,7 @@ RF24 * const radio = new RF24(RPI_GPIO_P1_22, BCM2835_SPI_CS0, BCM2835_SPI_SPEED
 glowworm_config * const glowworm = new glowworm_config();
 cauldron_config * const cauldron = new cauldron_config();
 
+WINDOW * menuWindow;
 WINDOW * infoWindow;
 
 int main(int argc, char** argv){
@@ -32,7 +33,8 @@ int main(int argc, char** argv){
 	noecho();
 	keypad(stdscr, TRUE);
 
-	infoWindow = newwin(20, 40, 20, 0);
+	menuWindow = newwin(20, 40, 0, 0);
+	infoWindow = newwin(20, 40, 0, 40);
 
 	while (createMenu(PROGRAM_EXIT)) {
 	}
@@ -82,15 +84,34 @@ bool createMenu(program_e prog) {
 	}
 	myItems[menuCount] = (ITEM *)NULL;
 
-	// And draw it
 	myMenu = new_menu((ITEM **)myItems);
-	post_menu(myMenu);
+
+	// Prepare the menu window
+	wclear(menuWindow);
+	box(menuWindow, 0, 0);
+ 	set_menu_win(myMenu, menuWindow);
+	set_menu_sub(myMenu, derwin(menuWindow, 16, 38, 3, 1));
+
+	// Menu window title uses the current selection
+	// and a separator
+	mvwaddch(menuWindow, 2, 0, ACS_LTEE);
+	mvwhline(menuWindow, 2, 1, ACS_HLINE, 38);
+	mvwaddch(menuWindow, 2, 39, ACS_RTEE);
+	mvwprintw(menuWindow, 1, 3,
+		prog == PROGRAM_EXIT ? "Select a Program" : MAIN_MENU[prog]);
+
+	// And draw it
 	refresh();
+	post_menu(myMenu);
+	wrefresh(menuWindow);
 
 	// Redraw the information window
 	wclear(infoWindow);
 	box(infoWindow, 0,0);
 	wrefresh(infoWindow);
+
+	// Focus on the menu window
+	keypad(menuWindow, TRUE);
 
 	program_e newProg = PROGRAM_EXIT;
 	while ((c = getch())) {
@@ -119,8 +140,12 @@ bool createMenu(program_e prog) {
 				break;
 		}
 
-		if (quit)
+		if (quit) {
+			// Need to refresh the window to register the selection change
+			wrefresh(menuWindow);
+		} else {
 			break;
+		}
 	}
 
 	unpost_menu(myMenu);
