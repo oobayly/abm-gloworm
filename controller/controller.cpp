@@ -141,10 +141,10 @@ bool createMenu(program_e prog) {
 		}
 
 		if (quit) {
+			break;
+		} else {
 			// Need to refresh the window to register the selection change
 			wrefresh(menuWindow);
-		} else {
-			break;
 		}
 	}
 
