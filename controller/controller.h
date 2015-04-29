@@ -68,7 +68,7 @@ const char * GLOWWORM_MENU[] = {
 	"Toggle Both",
 	"Toggle Left",
 	"Toggle Right",
-	"Blink",
+	"Toggle Blink",
 	"Red",
 	"Green",
 	"Blue",
