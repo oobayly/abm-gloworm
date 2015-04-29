@@ -208,6 +208,9 @@ bool doGlowworm(glowworm_e command) {
 		case GLOWWORM_TOGGLE_RIGHT:
 			return writeGlowworm((antenna_e)(glowworm->antenna ^ ANTENNA_RIGHT));
 
+		case GLOWWORM_BLINK:
+			return writeGlowworm(ANTENNA_BLINK);
+
 		case GLOWWORM_RED:
 			return writeGlowworm(0xff, 0, 0);
 
