@@ -12,6 +12,9 @@
 
 #define BLINK_INTERVAL 500  /* The time (in ms) between antenna blinks */
 
+#define PULSE_STEPS 250     /* The number of steps taken to pulse between 2 colours */
+#define PULSE_INTERVAL 2000 /* The time (in ms) to pulse a colour */
+
 #define SERIAL_BAUD 57600   /* Baud rate used for serial output */
 #define SERIAL_BUFFER 64    /* The number of bytes we can read from the buffer */
 
@@ -27,6 +30,7 @@ byte addresses[][6] = {"Ctrlr","Gworm"};
 // Timer configuration and steps to be used
 #define TIMER1_INTERVAL 1000 /* Timer1 uses microsecond precision */
 #define TIMER1_FADE_STEP ((FADE_INTERVAL / (TIMER1_INTERVAL / 1000)) / FADE_STEPS)
+#define TIMER1_PULSE_STEP ((PULSE_INTERVAL / (TIMER1_INTERVAL / 1000)) / PULSE_STEPS)
 
 // LED pins
 typedef enum {
@@ -58,6 +62,8 @@ uint16_t timer1_counter = 0;
 
 // Changes the LEDs to the specified colours
 void changeColour(glowworm_config *);
+
+uint32_t interpolate(uint32_t * from, uint32_t * to, uint16_t step, uint16_t steps);
 
 glowworm_config * readSerial();
 
