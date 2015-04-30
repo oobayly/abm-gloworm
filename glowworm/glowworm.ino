@@ -16,6 +16,9 @@ void setup() {
   printf("FADE_STEPS: %u\r\n", FADE_STEPS);
   printf("FADE_INTERVAL: %u ms\r\n", FADE_INTERVAL);
   printf("TIMER1_FADE_STEP: %u\r\n", TIMER1_FADE_STEP);
+  printf("PULSE_STEPS: %u\r\n", PULSE_STEPS);
+  printf("PULSE_INTERVAL: %u ms\r\n", PULSE_INTERVAL);
+  printf("TIMER1_PULSE_STEP: %u\r\n", TIMER1_PULSE_STEP);
   
   printf("Size of glowworm is %u bytes\r\n", sizeof(glowworm_config));
 #endif
@@ -76,11 +79,32 @@ void changeColour(glowworm_config * config) {
     ((uint32_t)config->b << 0);
   lights->step = 0;
   
-  lights->antenna = (antenna_e)(config->antenna & ANTENNA_BOTH);
+  lights->antenna = (antenna_e)config->antenna;
   digitalWrite(LED_LEFT, lights->antenna & ANTENNA_LEFT);
   digitalWrite(LED_RIGHT, lights->antenna & ANTENNA_RIGHT);
 
   printf("Setting colour from %06lx to %06lx - Antenna: %u\r\n", lights->last, lights->next, lights->antenna);
+}
+
+uint32_t interpolate(uint32_t * from, uint32_t * to, uint16_t step, uint16_t steps) {
+  uint32_t resp = 0;
+  
+  // Act on the each byte of the ARGB values
+  uint8_t * last = (uint8_t *)from;
+  uint8_t * next = (uint8_t *)to;
+  uint8_t * current = (uint8_t *)&resp;
+
+  // Interpolate the rgb values, ignoring MSB (Alpha)
+  for (uint8_t i = 0; i < 3; i++) {
+    // Use signed as the difference can be negative
+    int16_t l = last[i];
+    int16_t n = next[i];
+    
+    // Cast delta as float so we don't overflow
+    current[i] = (uint8_t)(l + ((float)(n - l) * step / steps));
+  }
+  
+  return resp;
 }
 
 glowworm_config * readSerial() {
@@ -180,36 +204,43 @@ void timer1Tick() {
 //
 //    printf("%06lX\t%06lX\t%u\r\n", lights->last, lights->next, lights->antenna);
 //  }
-
-  // Every fade increment update the colours
-  if (!(timer1_counter % TIMER1_FADE_STEP)) {
-    // But only if the colours have changed
-    if (lights->current != lights->next) {
-      // Act on the each byte of the ARGB values
-      uint8_t * last = (uint8_t *)&lights->last;
-      uint8_t * next = (uint8_t *)&lights->next;
-      uint8_t * current = (uint8_t *)&lights->current;
   
-      // Interpolate the rgb values, ignoring MSB (Alpha)
-      for (uint8_t i = 0; i < 3; i++) {
-        // Use signed as the difference can be negative
-        int16_t l = last[i];
-        int16_t n = next[i];
-        
-        // Cast delta as float so we don't overflow
-        current[i] = (uint8_t)(l + ((float)(n - l) * lights->step / FADE_STEPS));
-      }
+  // First the lights fade into the next colour
+  if ((lights->step <= FADE_STEPS) && !(timer1_counter % TIMER1_FADE_STEP)) {
+      lights->current = interpolate(
+        (uint32_t *)&lights->last,
+        (uint32_t *)&lights->next,
+        lights->step, FADE_STEPS);
       
-      analogWrite(LED_RED, current[2]);
-      analogWrite(LED_GREEN, current[1]);
-      analogWrite(LED_BLUE, current[0]);
+      analogWrite(LED_RED, (lights->current >> 16) & 0xff);
+      analogWrite(LED_GREEN, (lights->current >> 8) & 0xff);
+      analogWrite(LED_BLUE, lights->current & 0xff);
   
       lights->step++;
+  } else if ((lights->step > FADE_STEPS) && !(timer1_counter % TIMER1_PULSE_STEP)) {
+    uint16_t step = lights->step - FADE_STEPS;
+    
+    if (step > PULSE_STEPS) {
+      step = (2 * PULSE_STEPS) - step;
     }
+    
+    uint32_t dim = lights->next & 0x3f3f3f; // Dim to 25%
+    
+    uint32_t value = interpolate(
+      (uint32_t *)&lights->next,
+      (uint32_t *)&dim,
+      step, PULSE_STEPS);
+      
+    analogWrite(LED_RED, (value >> 16) & 0xff);
+    analogWrite(LED_GREEN, (value >> 8) & 0xff);
+    analogWrite(LED_BLUE, value & 0xff);
+    
+    lights->step++;
+    if (lights->step > (FADE_STEPS + (2 * PULSE_STEPS)))
+      lights->step = FADE_STEPS + 1;
   }
-  
-//  if ((lights->antenna & ANTENNA_BLINK) && !(timer1_counter % BLINK_INTERVAL)) {
-  if (!(timer1_counter % BLINK_INTERVAL)) {
+
+  if ((lights->antenna & ANTENNA_BLINK) && !(timer1_counter % BLINK_INTERVAL)) {
     lights->antenna = (antenna_e)(lights->antenna ^ ANTENNA_BOTH);
     digitalWrite(LED_LEFT, lights->antenna & ANTENNA_LEFT);
     digitalWrite(LED_RIGHT, lights->antenna & ANTENNA_RIGHT);
