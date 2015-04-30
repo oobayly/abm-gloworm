@@ -27,7 +27,6 @@ WINDOW * infoWindow;
 int main(int argc, char** argv){
 	// Setup the radio
 	setupRadio();
-	setupRadio(PROGRAM_GLOWWORM);
 
 	// Initialise the ncurses window
 	initscr();
@@ -292,6 +291,10 @@ void setupRadio(program_e prog) {
 	size_t payload;
 
 	switch (prog) {
+		case PROGRAM_BOTTLES:
+			payload = sizeof(bottles_config);
+			break;
+
 		case PROGRAM_CAULDRON:
 			payload = sizeof(cauldron_config);
 			break;
