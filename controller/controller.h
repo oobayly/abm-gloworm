@@ -16,8 +16,9 @@ uint8_t addresses[][6] = {
 typedef enum {
 	BOTTLES_BACK,
 	BOTTLES_OFF,
+	BOTTLES_RIGGING,
 	BOTTLES_RED,
-	BOTTLES_WHITE
+	BOTTLES_WHITE,
 } bottles_e;
 
 typedef enum {
@@ -53,6 +54,7 @@ typedef enum {
 const char * BOTTLES_MENU[] = {
 	"Back",
 	"ALl Off",
+	"Toggle Rigging light",
 	"Toggle Red",
 	"Toggle White"
 };

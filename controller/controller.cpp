@@ -171,11 +171,14 @@ bool doBottles(bottles_e command) {
 		case BOTTLES_OFF:
 			return writeBottles(BOTTLES_MODE_NONE);
 
+		case BOTTLES_RIGGING:
+			return writeBottles(bottles->mode == BOTTLES_MODE_RIGGING ? BOTTLES_MODE_NONE : BOTTLES_MODE_RIGGING);
+
 		case BOTTLES_RED:
-			return writeBottles((bottles_mode_e)(bottles->mode ^ BOTTLES_MODE_RED));
+			return writeBottles(bottles->mode == BOTTLES_MODE_RED ? BOTTLES_MODE_NONE : BOTTLES_MODE_RED);
 
 		case BOTTLES_WHITE:
-			return writeBottles((bottles_mode_e)(bottles->mode ^ BOTTLES_MODE_WHITE));
+			return writeBottles(bottles->mode == BOTTLES_MODE_WHITE ? BOTTLES_MODE_NONE : BOTTLES_MODE_WHITE);
 
 		default:
 			return true;
@@ -321,8 +324,9 @@ bool writeBottles(bottles_mode_e mode) {
 	wclear(infoWindow);
 	box(infoWindow, 0,0);
 
-	mvwprintw(infoWindow, 1, 1, "Red:   %s", (mode & BOTTLES_MODE_RED) ? "On" : "Off");
-	mvwprintw(infoWindow, 2, 1, "White: %s", (mode & BOTTLES_MODE_WHITE) ? "On" : "Off");
+	mvwprintw(infoWindow, 1, 1, "Rigging: %s", (mode == BOTTLES_MODE_RIGGING) ? "On" : "Off");
+	mvwprintw(infoWindow, 2, 1, "Red:     %s", (mode == BOTTLES_MODE_RED) ? "On" : "Off");
+	mvwprintw(infoWindow, 3, 1, "White:   %s", (mode == BOTTLES_MODE_WHITE) ? "On" : "Off");
 
 	wrefresh(infoWindow);
 
