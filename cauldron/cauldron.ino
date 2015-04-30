@@ -119,16 +119,16 @@ void setupCycles() {
   // The fan cycles between 50% and 100% every 5 seconds
   fan->enabled = false;
   fan->minimum = 0xff;
-  fan->maximum = 0x80;
+  fan->maximum = 0xc0;
   fan->time = 5000;
   fan->step = 0;
   fan->delta = 1;
 
-  // The fire cycles between 50% and 100% every 250ms
+  // The fire
   fire->enabled = false;
-  fire->minimum = 0x80;
+  fire->minimum = 0x20;
   fire->maximum = 0xff;
-  fire->time = 250;
+  fire->time = 500;
   fire->step = 0;
   fire->delta = 1;
 
@@ -205,10 +205,18 @@ void timer1Tick() {
   }
   
   if (fire->enabled) {
-    uint32_t value = interpolateValue(fire);
-    analogWrite(PWM_RED, (uint8_t)value);
+    if (fire->step++ == fire->time) {
+      uint8_t value = random(fire->minimum, fire->maximum) & 0xe0;
+      analogWrite(PWM_RED, value);
+      
+      fire->step = 0;
+      fire->time = random(20, 100);
+    }
+    
+//    uint32_t value = interpolateValue(fire);
+//    analogWrite(PWM_RED, (uint8_t)value);
 
-    stepCycle(fire);
+//    stepCycle(fire);
   }
   
   if (glow->enabled) {
