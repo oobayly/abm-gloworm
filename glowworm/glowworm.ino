@@ -77,8 +77,8 @@ void changeColour(glowworm_config * config) {
   lights->step = 0;
   
   lights->antenna = (antenna_e)(config->antenna & ANTENNA_BOTH);
-    digitalWrite(LED_LEFT, lights->antenna & ANTENNA_LEFT);
-    digitalWrite(LED_RIGHT, lights->antenna & ANTENNA_RIGHT);
+  digitalWrite(LED_LEFT, lights->antenna & ANTENNA_LEFT);
+  digitalWrite(LED_RIGHT, lights->antenna & ANTENNA_RIGHT);
 
   printf("Setting colour from %06lx to %06lx - Antenna: %u\r\n", lights->last, lights->next, lights->antenna);
 }
@@ -206,6 +206,13 @@ void timer1Tick() {
   
       lights->step++;
     }
+  }
+  
+//  if ((lights->antenna & ANTENNA_BLINK) && !(timer1_counter % BLINK_INTERVAL)) {
+  if (!(timer1_counter % BLINK_INTERVAL)) {
+    lights->antenna = (antenna_e)(lights->antenna ^ ANTENNA_BOTH);
+    digitalWrite(LED_LEFT, lights->antenna & ANTENNA_LEFT);
+    digitalWrite(LED_RIGHT, lights->antenna & ANTENNA_RIGHT);
   }
   
   timer1_counter++;

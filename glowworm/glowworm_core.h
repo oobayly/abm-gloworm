@@ -6,7 +6,8 @@ typedef enum {
 	ANTENNA_NONE = 0x0,
 	ANTENNA_LEFT = 0x1,
 	ANTENNA_RIGHT = 0x2,
-	ANTENNA_BOTH = ANTENNA_LEFT + ANTENNA_RIGHT
+	ANTENNA_BOTH = ANTENNA_LEFT + ANTENNA_RIGHT,
+	ANTENNA_BLINK = 0x4
 } antenna_e;
 
 // The configuration that is send over the RF24 link

@@ -10,6 +10,8 @@
 #define FADE_STEPS 250      /* The number of steps taken to fade between 2 colours */
 #define FADE_INTERVAL 1000  /* The time taken (in ms) to fade between 2 colours */
 
+#define BLINK_INTERVAL 500  /* The time (in ms) between antenna blinks */
+
 #define SERIAL_BAUD 57600   /* Baud rate used for serial output */
 #define SERIAL_BUFFER 64    /* The number of bytes we can read from the buffer */
 
