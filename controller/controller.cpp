@@ -6,6 +6,7 @@
 #include <curses.h>
 #include <menu.h>
 
+#include "../bottles/bottles_core.h"
 #include "../glowworm/glowworm_core.h"
 #include "../cauldron/cauldron_core.h"
 #include "controller.h"
@@ -16,6 +17,7 @@ using namespace std;
 
 RF24 * const radio = new RF24(RPI_GPIO_P1_22, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_8MHZ);
 
+bottles_config * const bottles = new bottles_config();
 glowworm_config * const glowworm = new glowworm_config();
 cauldron_config * const cauldron = new cauldron_config();
 
@@ -167,6 +169,15 @@ bool createMenu(program_e prog) {
 
 bool doBottles(bottles_e command) {
 	switch (command) {
+		case BOTTLES_OFF:
+			return writeBottles(BOTTLES_MODE_NONE);
+
+		case BOTTLES_RED:
+			return writeBottles((bottles_mode_e)(bottles->mode ^ BOTTLES_MODE_RED));
+
+		case BOTTLES_WHITE:
+			return writeBottles((bottles_mode_e)(bottles->mode ^ BOTTLES_MODE_WHITE));
+
 		default:
 			return true;
 	}
@@ -301,8 +312,31 @@ void setupRadio(program_e prog) {
 	radio->startListening();
 }
 
+bool writeBottles(bottles_mode_e mode) {
+	bottles->mode = mode;
+
+	wclear(infoWindow);
+	box(infoWindow, 0,0);
+
+	mvwprintw(infoWindow, 1, 1, "Red:   %s", (mode & BOTTLES_MODE_RED) ? "On" : "Off");
+	mvwprintw(infoWindow, 2, 1, "White: %s", (mode & BOTTLES_MODE_WHITE) ? "On" : "Off");
+
+	wrefresh(infoWindow);
+
+	bottles_config * response = new bottles_config();
+
+	bool success = writeRadio(bottles, sizeof(bottles), response);
+
+	delete response;
+
+	return success;
+}
+
 bool writeCauldron(cauldron_mode_e mode) {
 	cauldron->mode = mode;
+
+	wclear(infoWindow);
+	box(infoWindow, 0,0);
 
 	mvwprintw(infoWindow, 1, 1, "Fan:   %s", (mode & CAULDRON_MODE_FAN) ? "On" : "Off");
 	mvwprintw(infoWindow, 2, 1, "Fire:  %s", (mode & CAULDRON_MODE_FIRE) ? "On" : "Off");
@@ -332,6 +366,9 @@ bool writeGlowworm(antenna_e antenna, uint8_t r, uint8_t g, uint8_t b) {
 	glowworm->r = r;
 	glowworm->g = g;
 	glowworm->b = b;
+
+	wclear(infoWindow);
+	box(infoWindow, 0,0);
 
 	mvwprintw(infoWindow, 1, 1, "Antenna: %i", antenna);
 	mvwprintw(infoWindow, 2, 1, "Red:     0x%02x", r);

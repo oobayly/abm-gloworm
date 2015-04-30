@@ -1,5 +1,3 @@
-#include "../glowworm/glowworm_core.h"
-
 // Useful for determinging the size of an array
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -16,6 +14,13 @@ uint8_t addresses[][6] = {
 	"Cldrn"};
 
 typedef enum {
+	BOTTLES_BACK,
+	BOTTLES_OFF,
+	BOTTLES_RED,
+	BOTTLES_WHITE
+} bottles_e;
+
+typedef enum {
 	CAULDRON_BACK,
 	CAULDRON_OFF,
 	CAULDRON_TOGGLE_ALL,
@@ -23,10 +28,6 @@ typedef enum {
 	CAULDRON_TOGGLE_FIRE,
 	CAULDRON_TOGGLE_GLOW
 } cauldron_e;
-
-typedef enum {
-	BOTTLES_BACK
-} bottles_e;
 
 typedef enum {
 	GLOWWORM_BACK,
@@ -50,7 +51,10 @@ typedef enum {
 } program_e;
 
 const char * BOTTLES_MENU[] = {
-	"Back"
+	"Back",
+	"ALl Off",
+	"Toggle Red",
+	"Toggle White"
 };
 
 const char * CAULDRON_MENU[] = {
@@ -98,6 +102,8 @@ void programMenuSelected(program_e prog, ITEM * item);
 void setupRadio();
 
 void setupRadio(program_e prog);
+
+bool writeBottles(bottles_mode_e mode);
 
 bool writeCauldron(cauldron_mode_e mode);
 
