@@ -184,7 +184,7 @@ void stepCycle(cycle * cycle) {
 
 void timer1Tick() {
   if (mode == BOTTLES_MODE_RIGGING) {
-    analogWrite(PWM_RED, 0x10);
+    analogWrite(PWM_RED, 0x01);
     
   } else {
     if (white->enabled) {
