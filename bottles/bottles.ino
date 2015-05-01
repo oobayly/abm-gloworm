@@ -183,22 +183,29 @@ void stepCycle(cycle * cycle) {
 }
 
 void timer1Tick() {
-  if (white->enabled) {
-    uint8_t value = interpolateValue(white);
-    analogWrite(PWM_WHITE, value);
+  if (mode == BOTTLES_MODE_RIGGING) {
+    analogWrite(PWM_RED, 0x10);
     
-    stepCycle(white);
-  }
-  
-  if (red->enabled) {
-    uint8_t value = interpolateValue(red);
-    analogWrite(PWM_RED, value);
+  } else {
+    if (white->enabled) {
+      uint8_t value = interpolateValue(white);
+      analogWrite(PWM_WHITE, value);
+      
+      stepCycle(white);
+    }
     
-    stepCycle(red);
+    if (red->enabled) {
+      uint8_t value = interpolateValue(red);
+      analogWrite(PWM_RED, value);
+      
+      stepCycle(red);
+    }
   }
 }
 
 void updateConfig(bottles_config * config) {
+  mode = (bottles_mode_e)config->mode;
+  
   if (white->enabled = (config->mode & BOTTLES_MODE_WHITE)) {
     white->step = 0;
     white->delta = 1;

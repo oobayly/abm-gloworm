@@ -3,8 +3,9 @@
 
 typedef enum {
 	BOTTLES_MODE_NONE = 0,
-	BOTTLES_MODE_WHITE = 0x1,
-	BOTTLES_MODE_RED = 0x2,
+        BOTTLES_MODE_RIGGING = 0x1,
+	BOTTLES_MODE_WHITE = 0x2,
+	BOTTLES_MODE_RED = 0x3,
 } bottles_mode_e;
 
 // The configuration that is send over the RF24 link
