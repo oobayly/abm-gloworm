@@ -206,21 +206,22 @@ void timer1Tick() {
 void updateConfig(bottles_config * config) {
   mode = (bottles_mode_e)config->mode;
   
-  if (white->enabled = (config->mode & BOTTLES_MODE_WHITE)) {
+  if (white->enabled = (config->mode == BOTTLES_MODE_WHITE)) {
     white->step = 0;
     white->delta = 1;
   } else {
     analogWrite(PWM_WHITE, 0);
   }
 
-  if (red->enabled = (config->mode & BOTTLES_MODE_RED)) {
+  if (red->enabled = (config->mode == BOTTLES_MODE_RED)) {
     red->step = 0;
     red->delta = 1;
   } else {
     analogWrite(PWM_RED, 0);
   }
   
-  printf("Setting: Red = %s, White = %s\n",
+  printf("Setting: Rigging = %s, Red = %s, White = %s\n",
+    mode == BOTTLES_MODE_RIGGING ? "On" : "Off",
     white->enabled ? "On" : "Off",
     red->enabled ? "On" : "Off");
 }
