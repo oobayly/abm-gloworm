@@ -225,19 +225,19 @@ bool doGlowworm(glowworm_e command) {
 			return writeGlowworm((antenna_e)(glowworm->antenna ^ ANTENNA_BLINK));
 
 		case GLOWWORM_RED:
-			return writeGlowworm(0xff, 0, 0);
+			return writeGlowworm(0xa0, 0, 0);
 
 		case GLOWWORM_GREEN:
-			return writeGlowworm(0, 0xff, 0);
+			return writeGlowworm(0, 0xa0, 0);
 
 		case GLOWWORM_BLUE:
-			return writeGlowworm(0,0, 0xff);
+			return writeGlowworm(0,0, 0xa0);
 
 		case GLOWWORM_YELLOW:
-			return writeGlowworm(0xff, 0xff, 0);
+			return writeGlowworm(0xa0, 0xa0, 0);
 
 		case GLOWWORM_PINK:
-			return writeGlowworm(0xff, 0x14,0x93); // Deep Pink
+			return writeGlowworm(0xff, 0x0a,0x50); // Deep Pink
 
 		default:
 			return true;
