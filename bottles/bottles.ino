@@ -117,16 +117,16 @@ bottles_config * readSerial() {
 
 void setupCycles() {
   white->enabled = false;
-  white->minimum = 0x40;
-  white->maximum = 0xff;
-  white->time = 5000;
+  white->minimum = 0x10;
+  white->maximum = 0x40;
+  white->time = 2500;
   white->step = 0;
   white->delta = 1;
 
   red->enabled = false;
-  red->minimum = 0x10;
+  red->minimum = 0x40;
   red->maximum = 0xff;
-  red->time = 1500;
+  red->time = 1000;
   red->step = 0;
   red->delta = 1;
 }
